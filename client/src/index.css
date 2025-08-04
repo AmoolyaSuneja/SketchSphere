@@ -1,0 +1,159 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* App container */
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Main content area */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+/* Header */
+.header {
+  background: #333;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: normal;
+  margin: 0;
+}
+
+/* Whiteboard container */
+.whiteboard {
+  flex: 1;
+  position: relative;
+  background: white;
+  border: 1px solid #ccc;
+}
+
+/* User panel */
+.user-panel {
+  width: 200px;
+  background: white;
+  border-left: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-panel-header {
+  background: #333;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+}
+
+.user-panel-header h3 {
+  font-size: 1rem;
+  margin: 0;
+  font-weight: normal;
+}
+
+/* Users list */
+.users-list {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.user-item {
+  padding: 0.5rem;
+  margin-bottom: 0.25rem;
+  background: #f8f8f8;
+  border-radius: 4px;
+}
+
+.user-name {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+/* Controls panel */
+.controls-panel {
+  background: #f8f8f8;
+  padding: 1rem;
+  border-top: 1px solid #ccc;
+}
+
+.control-btn {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.control-btn:hover {
+  background: #f0f0f0;
+}
+
+/* Debug info */
+.debug-info {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  z-index: 100;
+  border: 1px solid #ccc;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 1rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+  }
+  
+  .user-panel {
+    width: 100%;
+    height: 150px;
+    border-left: none;
+    border-top: 1px solid #ccc;
+  }
+  
+  .header {
+    padding: 0.5rem 1rem;
+  }
+  
+  .header h1 {
+    font-size: 1.2rem;
+  }
+}
