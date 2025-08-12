@@ -86,11 +86,11 @@ function App() {
         <VideoCall />
       </div>
       
-      <UserPanel 
+      {/* <UserPanel 
         users={users} 
         roomId={roomId}
         onErase={handleErase}
-      />
+      /> */}
     </div>
   );
 }

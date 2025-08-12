@@ -3,7 +3,7 @@ import { Stage, Layer, Line, Circle, Rect } from 'react-konva';
 import { SHAPES, EVENTS } from '../utils/constants';
 import useDrawing from '../hooks/useDrawing';
 import { SocketContext } from '../context/SocketContext';
-import { recognizeShape } from '../utils/shapeRecognition';
+// import { recognizeShape } from '../utils/shapeRecognition';
 
 const Whiteboard = forwardRef(({ roomId, users, onErase }, ref) => {
   const socket = useContext(SocketContext);
@@ -65,10 +65,10 @@ const Whiteboard = forwardRef(({ roomId, users, onErase }, ref) => {
       });
     };
 
-    const handleShapeRecognized = (shape) => {
-      setElements(prev => [...prev, { ...shape, id: Date.now() }]);
-      setDebugInfo(`Shape corrected: ${shape.type}`);
-    };
+    // const handleShapeRecognized = (shape) => {
+    //   setElements(prev => [...prev, { ...shape, id: Date.now() }]);
+    //   setDebugInfo(`Shape corrected: ${shape.type}`);
+    // };
 
     const handleClearBoard = () => {
       setElements([]);
@@ -77,13 +77,13 @@ const Whiteboard = forwardRef(({ roomId, users, onErase }, ref) => {
 
     socket.on(EVENTS.DRAW_START, handleRemoteDrawStart);
     socket.on(EVENTS.DRAW_MOVE, handleRemoteDrawMove);
-    socket.on(EVENTS.SHAPE_RECOGNIZED, handleShapeRecognized);
+    // socket.on(EVENTS.SHAPE_RECOGNIZED, handleShapeRecognized);
     socket.on(EVENTS.CLEAR_BOARD, handleClearBoard);
 
     return () => {
       socket.off(EVENTS.DRAW_START, handleRemoteDrawStart);
       socket.off(EVENTS.DRAW_MOVE, handleRemoteDrawMove);
-      socket.off(EVENTS.SHAPE_RECOGNIZED, handleShapeRecognized);
+      // socket.off(EVENTS.SHAPE_RECOGNIZED, handleShapeRecognized);
       socket.off(EVENTS.CLEAR_BOARD, handleClearBoard);
     };
   }, [setElements, socket]);
@@ -113,8 +113,8 @@ const Whiteboard = forwardRef(({ roomId, users, onErase }, ref) => {
     if (lastElement.type === SHAPES.FREEHAND && lastElement.points.length >= 6) {
       try {
         console.log("Attempting shape recognition with points:", lastElement.points.length);
-        const recognized = recognizeShape(lastElement.points);
-        console.log("Recognition result:", recognized);
+        // const recognized = recognizeShape(lastElement.points);
+        // console.log("Recognition result:", recognized);
         
         if (recognized) {
           console.log(`Recognized as ${recognized.type}`);
@@ -148,7 +148,7 @@ const Whiteboard = forwardRef(({ roomId, users, onErase }, ref) => {
         }
       } catch (error) {
         console.error("Recognition error:", error);
-        setDebugInfo(`Recognition error: ${error.message}`);
+        setDebugInfo(`Drawing Ended`);
       }
     }
   };
