@@ -1,4 +1,4 @@
-# AI Liveboard - Tech Stack & Features
+# SketchSphere
 
 ## 🚀 Technology Stack
 
