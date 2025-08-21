@@ -189,28 +189,7 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
           </div>
         </div>
 
-        <div className="tool-group">
-          <div className="tool-group-title">Colors</div>
-          <div className="tool-label">Brush Color</div>
-          <input
-            type="color"
-            className="color-picker"
-            value={selectedColor}
-            onChange={(e) => handleColorSelect(e.target.value)}
-            title="Choose brush color"
-          />
-          <div className="preset-colors">
-            {presetColors.map((color) => (
-              <button
-                key={color}
-                className={`preset-color-btn ${selectedColor === color ? 'selected' : ''}`}
-                style={{ backgroundColor: color }}
-                onClick={() => handleColorSelect(color)}
-                title={`Select ${color}`}
-              />
-            ))}
-          </div>
-        </div>
+
 
         <div className="tool-group">
           <div className="tool-group-title">Canvas Background</div>
@@ -235,74 +214,9 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
           </div>
         </div>
 
-        <div className="tool-group">
-          <div className="tool-group-title">Tool Sizes</div>
-          <div className="tool-label">Pencil Size: {pencilSize}px</div>
-          <div className="brush-size-control">
-            <div className="brush-size-preview">
-              <div 
-                className="brush-preview-circle"
-                style={{ 
-                  width: Math.max(20, pencilSize * 2), 
-                  height: Math.max(20, pencilSize * 2),
-                  borderWidth: Math.max(1, pencilSize / 4)
-                }}
-              >
-                {pencilSize}
-              </div>
-              <input
-                type="range"
-                className="brush-size-slider"
-                min="1"
-                max="20"
-                value={pencilSize}
-                onChange={(e) => {
-                  const size = parseInt(e.target.value);
-                  setPencilSize(size);
-                }}
-                title="Adjust pencil size"
-                style={{ flex: 1 }}
-              />
-            </div>
-            <div className="brush-size-value">{pencilSize}px</div>
-          </div>
-        </div>
 
-        <div className="tool-group">
-          <div className="tool-label">Eraser Size: {eraserSize}px</div>
-          <div className="brush-size-control">
-            <div className="brush-size-preview">
-              <div 
-                className="brush-preview-circle"
-                style={{ 
-                  width: Math.max(20, eraserSize * 2), 
-                  height: Math.max(20, eraserSize * 2),
-                  borderWidth: Math.max(1, eraserSize / 4)
-                }}
-              >
-                {eraserSize}
-              </div>
-              <input
-                type="range"
-                className="brush-size-slider"
-                min="2"
-                max="40"
-                value={eraserSize}
-                onChange={(e) => {
-                  const size = parseInt(e.target.value);
-                  setEraserSize(size);
-                }}
-                title="Adjust eraser size"
-                style={{ flex: 1 }}
-              />
-            </div>
-            <div className="brush-size-value">{eraserSize}px</div>
-          </div>
-        </div>
 
-        <div className="scroll-hint">
-          <span>↓ Scroll for more options ↓</span>
-        </div>
+
       </div>
 
       {/* Floating Canvas Controls */}
