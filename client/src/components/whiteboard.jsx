@@ -11,7 +11,8 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
   const [canvasColor, setCanvasColor] = useState('#ffffff');
   const [pencilSize, setPencilSize] = useState(3);
   const [eraserSize, setEraserSize] = useState(6);
-  const [showGrid, setShowGrid] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
+  const [showCanvasColorPicker, setShowCanvasColorPicker] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [isDrawing, setIsDrawing] = useState(false);
   const [isErasing, setIsErasing] = useState(false);
@@ -145,7 +146,7 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
 
   const handleDraw = () => {
     setIsErasing(false);
-    setIsDrawing(false);
+    setIsDrawing(true);
   };
 
   const handleColorSelect = (color) => {
@@ -167,13 +168,13 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
     <div className="whiteboard">
       {/* Drawing Tools Panel */}
       <div className="drawing-tools">
-        <div className="tools-header">🎨 Drawing Tools</div>
+                 <div className="tools-header">Drawing Tools</div>
         
         <div className="tool-group">
           <div className="tool-group-title">Tools</div>
           <div className="tool-buttons">
             <button 
-              className={`tool-btn ${!isErasing ? 'active' : ''}`}
+              className={`tool-btn ${!isErasing && isDrawing ? 'active' : ''}`}
               onClick={handleDraw}
               title="Pencil Tool"
             >
@@ -193,26 +194,60 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
 
         <div className="tool-group">
           <div className="tool-group-title">Canvas Background</div>
-          <div className="tool-label">Canvas Color</div>
-          <input
-            type="color"
-            className="color-picker"
-            value={canvasColor}
-            onChange={(e) => setCanvasColor(e.target.value)}
+          <button 
+            className="canvas-color-btn"
+            onClick={() => setShowCanvasColorPicker(!showCanvasColorPicker)}
             title="Choose canvas background color"
-          />
-          <div className="preset-colors">
-            {canvasPresetColors.map((color) => (
-              <button
-                key={color}
-                className={`preset-color-btn ${canvasColor === color ? 'selected' : ''}`}
-                style={{ backgroundColor: color }}
-                onClick={() => setCanvasColor(color)}
-                title={`Select ${color}`}
-              />
-            ))}
-          </div>
+          >
+            <div className="color-preview" style={{ backgroundColor: canvasColor }}></div>
+            <span>Canvas Color</span>
+                         <span className="color-icon">⚡</span>
+          </button>
         </div>
+        
+        {showCanvasColorPicker && (
+          <div className="color-panel-overlay" onClick={() => setShowCanvasColorPicker(false)}>
+            <div className="color-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="color-panel-header">
+                <h3>Choose Canvas Color</h3>
+                <button 
+                  className="close-btn"
+                  onClick={() => setShowCanvasColorPicker(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="color-panel-content">
+                <div className="custom-color-section">
+                  <label>Custom Color</label>
+                  <input
+                    type="color"
+                    className="color-picker"
+                    value={canvasColor}
+                    onChange={(e) => setCanvasColor(e.target.value)}
+                    title="Choose custom canvas color"
+                  />
+                </div>
+                
+                <div className="preset-colors-section">
+                  <label>Preset Colors</label>
+                  <div className="preset-colors">
+                    {canvasPresetColors.map((color) => (
+                      <button
+                        key={color}
+                        className={`preset-color-btn ${canvasColor === color ? 'selected' : ''}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setCanvasColor(color)}
+                        title={`Select ${color}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
 
 
@@ -248,7 +283,7 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
       {/* Empty State */}
       {elements.length === 0 && (
         <div className="canvas-empty-state">
-          <div className="empty-icon">🎨</div>
+                     <div className="empty-icon">✨</div>
           <div className="empty-text">Ready to create!</div>
           <div className="empty-hint">✏️ Pick a tool & start sketching!</div>
         </div>

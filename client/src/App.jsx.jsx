@@ -65,12 +65,6 @@ function App() {
   }, [socket, roomId]);
 
   // Header toolbar actions
-  const handleClear = () => {
-    setElements([]);
-    // Emit clear board event to other users
-    socket.emit(EVENTS.CLEAR_BOARD, { roomId });
-  };
-
   const handleErase = () => {
     // Call the whiteboard's erase method
     if (whiteboardRef.current) {
@@ -87,13 +81,6 @@ function App() {
           </div>
           
           <div className="header-toolbar">
-            <button 
-              className="header-btn"
-              onClick={handleClear}
-              title="Clear Board"
-            >
-              🗑️ Clear
-            </button>
           </div>
         </div>
         
