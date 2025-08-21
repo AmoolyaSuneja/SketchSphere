@@ -4,6 +4,7 @@ export const SHAPES = {
   TRIANGLE: 'triangle',
   LINE: 'line',
   FREEHAND: 'freehand',
+  ERASER: 'eraser',
   TEXT: 'text'
 };
 

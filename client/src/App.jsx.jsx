@@ -10,6 +10,7 @@ function App() {
   const [users, setUsers] = useState([]);
   const [roomId] = useState('default-room');
   const [currentUser, setCurrentUser] = useState(null);
+  const [elements, setElements] = useState([]);
   const whiteboardRef = useRef(null);
 
   useEffect(() => {
@@ -63,6 +64,13 @@ function App() {
     };
   }, [socket, roomId]);
 
+  // Header toolbar actions
+  const handleClear = () => {
+    setElements([]);
+    // Emit clear board event to other users
+    socket.emit(EVENTS.CLEAR_BOARD, { roomId });
+  };
+
   const handleErase = () => {
     // Call the whiteboard's erase method
     if (whiteboardRef.current) {
@@ -74,13 +82,27 @@ function App() {
     <div className="app">
       <div className="main-content">
         <div className="header">
-          <h1>AI Whiteboard</h1>
+          <div className="header-left">
+            <h1>🎨 SketchSphere</h1>
+          </div>
+          
+          <div className="header-toolbar">
+            <button 
+              className="header-btn"
+              onClick={handleClear}
+              title="Clear Board"
+            >
+              🗑️ Clear
+            </button>
+          </div>
         </div>
         
         <Whiteboard 
           ref={whiteboardRef}
           roomId={roomId} 
           users={users}
+          elements={elements}
+          setElements={setElements}
           onErase={handleErase}
         />
         <VideoCall />
@@ -89,7 +111,6 @@ function App() {
       {/* <UserPanel 
         users={users} 
         roomId={roomId}
-        onErase={handleErase}
       /> */}
     </div>
   );
