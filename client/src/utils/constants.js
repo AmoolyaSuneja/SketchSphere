@@ -21,6 +21,7 @@ export const EVENTS = {
   DRAW_MOVE: 'draw-move',
   DRAW_END: 'draw-end',
   SHAPE_RECOGNIZED: 'shape-recognized',
+  SHAPE_UPDATE: 'shape-update',
   CLEAR_BOARD: 'clear-board',
 
   // Cursor events

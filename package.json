@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
+    "lodash": "^4.17.21",
+    "ml-matrix": "^6.12.1"
+  }
+}
