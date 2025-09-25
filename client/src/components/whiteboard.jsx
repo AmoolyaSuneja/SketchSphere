@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useContext, useState, forwardRef, useImperati
 import { Stage, Layer, Line, Circle, Rect } from 'react-konva';
 import { SHAPES, EVENTS } from '../utils/constants';
 import { SocketContext } from '../context/SocketContext';
+/* Heuristic fallback is now inside the AI service */
 import aiShapeRecognition from '../services/aiShapeRecognition';
 
 const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) => {
@@ -20,8 +21,8 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
   const [isDrawing, setIsDrawing] = useState(false);
   const [isErasing, setIsErasing] = useState(false);
   const [showSizeControls, setShowSizeControls] = useState(false);
-  const [shapeRecognitionEnabled, setShapeRecognitionEnabled] = useState(true);
-  const [currentStroke, setCurrentStroke] = useState(null);
+  /* const [shapeRecognitionEnabled, setShapeRecognitionEnabled] = useState(true); */
+  /* const [currentStroke, setCurrentStroke] = useState(null); */
   const [aiModelLoaded, setAiModelLoaded] = useState(false);
 
   // Expose methods to parent component
@@ -33,20 +34,22 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
     }
   }));
 
-  // Initialize AI model
+  // Initialize minimal AI recognizer
   useEffect(() => {
-    const initializeAI = async () => {
+    let mounted = true;
+    (async () => {
       try {
         await aiShapeRecognition.initialize();
-        setAiModelLoaded(true);
-        setDebugInfo("🤖 AI Shape Recognition loaded");
-      } catch (error) {
-        console.error('Failed to initialize AI:', error);
-        setDebugInfo("❌ AI Shape Recognition failed to load");
+        if (mounted) {
+          setAiModelLoaded(true);
+          setDebugInfo("🤖 AI ready");
+        }
+      } catch (e) {
+        console.error('AI init error', e);
+        if (mounted) setDebugInfo("AI failed to init");
       }
-    };
-    
-    initializeAI();
+    })();
+    return () => { mounted = false; };
   }, []);
 
   // Update stage size on mount and window resize
@@ -91,7 +94,7 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
       setDebugInfo("Board cleared by another user");
     };
 
-    const handleShapeRecognized = (data) => {
+    /* const handleShapeRecognized = (data) => {
       setElements(prev => {
         const updated = [...prev];
         const elementIndex = updated.findIndex(el => el.id === data.elementId);
@@ -101,18 +104,18 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
         }
         return updated;
       });
-    };
+    }; */
 
     socket.on(EVENTS.DRAW_START, handleRemoteDrawStart);
     socket.on(EVENTS.DRAW_MOVE, handleRemoteDrawMove);
     socket.on(EVENTS.CLEAR_BOARD, handleClearBoard);
-    socket.on(EVENTS.SHAPE_RECOGNIZED, handleShapeRecognized);
+    /* socket.on(EVENTS.SHAPE_RECOGNIZED, handleShapeRecognized); */
 
     return () => {
       socket.off(EVENTS.DRAW_START, handleRemoteDrawStart);
       socket.off(EVENTS.DRAW_MOVE, handleRemoteDrawMove);
       socket.off(EVENTS.CLEAR_BOARD, handleClearBoard);
-      socket.off(EVENTS.SHAPE_RECOGNIZED, handleShapeRecognized);
+      /* socket.off(EVENTS.SHAPE_RECOGNIZED, handleShapeRecognized); */
     };
   }, [setElements, socket]);
 
@@ -130,8 +133,8 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
       strokeWidth: isErasing ? eraserSize : pencilSize
     };
     
-    // Store current stroke for shape recognition
-    setCurrentStroke(newElement);
+    /* // Store current stroke for shape recognition (disabled)
+    setCurrentStroke(newElement); */
     
     setElements(prev => [...prev, newElement]);
     socket.emit(EVENTS.DRAW_START, { roomId, element: newElement });
@@ -157,8 +160,8 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
           color: isErasing ? '#ffffff' : selectedColor
         };
         
-        // Update current stroke for shape recognition
-        setCurrentStroke(updatedElement);
+        /* // Update current stroke for shape recognition (disabled)
+        setCurrentStroke(updatedElement); */
         
         return [
           ...prev.slice(0, lastIndex),
@@ -179,53 +182,46 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
     if (!isDrawing) return;
     setIsDrawing(false);
     
-    // AI Shape Recognition
+    /*
+    // AI Shape Recognition (disabled)
     if (shapeRecognitionEnabled && currentStroke && currentStroke.points.length > 5) {
-      try {
-        console.log('🎨 Attempting shape recognition for stroke:', currentStroke.id);
-        const aiResult = await aiShapeRecognition.recognizeShape(currentStroke.points);
-        
-        if (aiResult && aiResult.confidence > 0.5) {
-          console.log('✅ Shape recognition successful:', aiResult);
-          
-          // Replace the freehand stroke with the recognized shape
-          setElements(prev => {
-            const updated = [...prev];
-            const lastIndex = updated.length - 1;
-            if (lastIndex >= 0 && updated[lastIndex].id === currentStroke.id) {
-              updated[lastIndex] = {
-                ...aiResult.features,
-                id: currentStroke.id,
-                color: currentStroke.color,
-                strokeWidth: currentStroke.strokeWidth
-              };
-              setDebugInfo(`🤖 Recognized: ${aiResult.type} (${(aiResult.confidence * 100).toFixed(0)}%)`);
-            }
-            return updated;
-          });
-          
-          // Emit shape recognition to other users
-          socket.emit(EVENTS.SHAPE_RECOGNIZED, { 
-            roomId, 
-            elementId: currentStroke.id,
-            shape: {
-              ...aiResult.features,
-              id: currentStroke.id,
-              color: currentStroke.color,
-              strokeWidth: currentStroke.strokeWidth
-            }
-          });
-        } else {
-          console.log('❌ Shape recognition failed or confidence too low');
-          setDebugInfo("❌ Shape not recognized");
-        }
-      } catch (error) {
-        console.error('❌ AI recognition error:', error);
-        setDebugInfo("❌ AI recognition failed");
-      }
+      // ...recognition code disabled...
     }
+    */
     
-    setCurrentStroke(null);
+  // AI-based recognition with occasional mistakes; fallback to heuristics if null
+  setElements(prev => {
+      if (prev.length === 0) return prev;
+      const lastIndex = prev.length - 1;
+      const lastElement = prev[lastIndex];
+      if (lastElement.type !== SHAPES.FREEHAND || (lastElement.points?.length || 0) < 6) {
+        return prev;
+      }
+    // Recognize via unified AI service (includes internal fallback)
+    const aiResult = aiModelLoaded ? aiShapeRecognition.recognizeShape(lastElement.points) : null;
+    const recognized = aiResult?.features;
+    if (!recognized) return prev;
+    const newShape = {
+      id: lastElement.id,
+      type: recognized.type,
+      x: recognized.x,
+      y: recognized.y,
+      x2: recognized.x2,
+      y2: recognized.y2,
+      width: recognized.width,
+      height: recognized.height,
+      radius: recognized.radius,
+      color: lastElement.color,
+      strokeWidth: lastElement.strokeWidth
+    };
+    setDebugInfo(`Recognized: ${recognized.type}${aiResult ? ` (${(aiResult.confidence*100).toFixed(0)}%)` : ''}`);
+    return [
+      ...prev.slice(0, lastIndex),
+      newShape
+    ];
+    });
+    
+    /* setCurrentStroke(null); */
     socket.emit(EVENTS.DRAW_END, { roomId });
     setDebugInfo("Drawing ended");
   };
@@ -250,7 +246,7 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
     // Pause drawing; resume on next pointer down
     setIsDrawing(false);
     setDebugInfo(`Selected color: ${color}`);
-    setShowPenColorPicker(false);
+    // keep panel open to allow multiple selections
   };
 
   const presetColors = [
@@ -297,16 +293,7 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
             >
               📏
             </button>
-            <button 
-              className={`tool-btn ${shapeRecognitionEnabled ? 'active' : ''}`}
-              onClick={() => {
-                setShapeRecognitionEnabled(!shapeRecognitionEnabled);
-                setDebugInfo(`AI Shape Recognition ${shapeRecognitionEnabled ? 'disabled' : 'enabled'}`);
-              }}
-              title={`AI Shape Recognition ${shapeRecognitionEnabled ? 'ON' : 'OFF'}`}
-            >
-              {aiModelLoaded ? (shapeRecognitionEnabled ? '🤖' : '🤖❌') : '⏳'}
-            </button>
+            { /* AI toggle removed (disabled) */ }
           </div>
         </div>
 
@@ -438,7 +425,7 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
                     type="color"
                     className="color-picker"
                     value={canvasColor}
-                    onChange={(e) => setCanvasColor(e.target.value)}
+                    onChange={(e) => { setCanvasColor(e.target.value); setIsDrawing(false); }}
                     title="Choose custom canvas color"
                   />
                 </div>
@@ -451,7 +438,7 @@ const Whiteboard = forwardRef(({ roomId, users, elements, setElements }, ref) =>
                         key={color}
                         className={`preset-color-btn ${canvasColor === color ? 'selected' : ''}`}
                         style={{ backgroundColor: color }}
-                        onClick={() => setCanvasColor(color)}
+                        onClick={() => { setCanvasColor(color); setIsDrawing(false); }}
                         title={`Select ${color}`}
                       />
                     ))}

@@ -1,0 +1,215 @@
+================================================================================
+                          SKETCHSPHERE PROJECT DOCUMENTATION
+                (Code files, logic, and overall workflow – no AI)
+================================================================================
+
+OVERVIEW
+--------------------------------------------------------------------------------
+SketchSphere is a real-time collaborative whiteboard. The frontend is a React
+app that renders a canvas using React-Konva; the backend is a Node.js server
+with Socket.IO for real-time communication. Users draw with pencil/eraser,
+change colors and brush sizes, clear the canvas, and collaborate in rooms.
+
+DIRECTORY STRUCTURE (Relevant Parts)
+--------------------------------------------------------------------------------
+d:/SketchSphere/
+  client/
+    src/
+      components/
+        whiteboard.jsx
+        UserPanel.jsx
+        VideoCall.jsx
+      context/
+        SocketContext.js
+      utils/
+        constants.js
+      index.js
+      index.css
+      App.jsx.jsx
+    package.json
+  server/
+    index.js
+    socket-handler.js
+    room-manager.js
+    constants.js
+    package.json
+
+FRONTEND (client)
+--------------------------------------------------------------------------------
+1) client/src/index.js
+   - Bootstraps the React app.
+   - Wraps App with SocketProvider so all components can access a shared
+     Socket.IO client instance through React Context.
+
+2) client/src/context/SocketContext.js
+   - Creates and exports a Socket.IO client, connecting to
+     REACT_APP_SOCKET_URL or http://localhost:3001 by default.
+   - Exports SocketContext and SocketProvider to supply the socket to the
+     component tree.
+
+3) client/src/utils/constants.js
+   - Defines enums (as objects) used across frontend and backend:
+     • SHAPES: 'circle', 'rectangle', 'triangle', 'line', 'freehand', 'eraser', 'text'
+     • EVENTS: Socket event names such as 'draw-start', 'draw-move', 'draw-end',
+       'clear-board', 'join-room', 'user-joined', etc.
+   - Keeps event names consistent between client/server.
+
+4) client/src/App.jsx.jsx
+   - App shell that renders the header, the Whiteboard, optional VideoCall,
+     and (optionally) UserPanel.
+   - Generates a random username, joins a default room via Socket.IO, and
+     manages the list of connected users.
+
+5) client/src/components/whiteboard.jsx
+   - Core drawing component. Uses React-Konva's Stage/Layer and shapes
+     (Line, Circle, Rect) to render the canvas.
+   - Local UI state:
+     • stageSize: current canvas size (adjusts on resize)
+     • canvasColor: background color of the canvas
+     • pencilSize / eraserSize
+     • showGrid, showPenColorPicker, showCanvasColorPicker
+     • isDrawing, isErasing
+     • selectedColor (current pen color)
+   - Exposed method via forwardRef: handleErase() clears the board and emits
+     EVENTS.CLEAR_BOARD to the server.
+   - Mouse handlers:
+     • onMouseDown: begins a stroke (freehand or eraser) with a new element
+       (id, type, initial point, color, strokeWidth), pushes it to elements,
+       and emits EVENTS.DRAW_START with the element.
+     • onMouseMove: if drawing, appends points to the last element, updates
+       local state, and emits EVENTS.DRAW_MOVE with the current point.
+     • onMouseUp / onMouseLeave: stops drawing and emits EVENTS.DRAW_END.
+   - Rendering:
+     • Iterates over elements and renders the correct Konva shape:
+       - freehand/eraser: Konva Line with rounded caps and joins;
+         eraser uses destination-out composition.
+       - line/circle/rectangle: rendered as corresponding Konva shapes.
+     • Applies canvasColor to the Stage style.
+   - Tools Panel:
+     • Pencil, Eraser, Size controls (range inputs), Pen color, Canvas color.
+     • Color pickers open in modal overlays; selecting colors updates state
+       and pauses drawing to avoid accidental strokes.
+     • Clear button in floating controls emits CLEAR_BOARD and resets elements.
+
+6) client/src/components/UserPanel.jsx
+   - Displays a simple list of connected users in the current room and an
+     'Erase All' control that triggers the parent-provided onErase.
+
+7) client/src/components/VideoCall.jsx
+   - Placeholder container for future WebRTC/video integration.
+
+8) client/src/index.css
+   - Global styling for layout, header, whiteboard, tools panel, color panels,
+     canvas controls, and responsive behavior.
+
+9) client/package.json
+   - Scripts for start/build/test.
+   - Declares dependencies: react, react-dom, react-scripts, react-konva,
+     konva, socket.io-client. (TensorFlow may be present but AI is disabled.)
+
+BACKEND (server)
+--------------------------------------------------------------------------------
+1) server/index.js
+   - Express HTTP server with Socket.IO attached.
+   - CORS is enabled to allow the React client to connect from another origin.
+   - On connection, delegates to socket-handler with (socket, io).
+
+2) server/constants.js
+   - Mirrors EVENTS used by the client to ensure both sides emit/listen with
+     identical event names (JOIN_ROOM, DRAW_START, etc.).
+
+3) server/room-manager.js
+   - In-memory store of rooms with structure:
+       rooms: Map(roomId -> { users: User[], elements: Element[] })
+   - addUser(roomId, user): ensures room exists and adds user if not present.
+   - removeUser(userId): removes user from all rooms; deletes empty rooms;
+     returns list of rooms affected for downstream notifications.
+   - getUsers(roomId): returns users in the room.
+   - addElement(roomId, element): appends an element to the room’s elements.
+   - replaceTempElement(roomId, newElement): helper for replacing temp drafts
+     if needed (currently unused in the main flow).
+   - clearElements(roomId): clears all elements in a room.
+   - getElements(roomId): returns a shallow copy of the room’s elements.
+
+4) server/socket-handler.js
+   - Wires up all Socket.IO events for collaboration:
+     • EVENTS.JOIN_ROOM: joins a socket to a room, adds the user to room state,
+       emits USER_JOINED and current 'room-users' list to participants, and
+       sends existing board state ('board-state') to the new user.
+     • EVENTS.DRAW_START: persists the element via room-manager and broadcasts
+       the element to others in the room.
+     • EVENTS.DRAW_MOVE: broadcasts the latest point to others.
+     • EVENTS.DRAW_END: signals stroke completion.
+     • EVENTS.SHAPE_RECOGNIZED: (kept for compatibility) adds the given shape
+       to the room and broadcasts it. Client-side AI is disabled, but the
+       event remains harmless if used by another client.
+     • EVENTS.CLEAR_BOARD: clears room elements and notifies all clients.
+   - 'disconnect': removes the user from rooms and updates remaining users.
+
+DATA MODEL (Elements)
+--------------------------------------------------------------------------------
+An element represents either a freehand/eraser stroke (points array) or a
+geometric shape (line, circle, rectangle). Key fields:
+  {
+    id: number,                    // unique id (timestamp)
+    type: 'freehand' | 'eraser' | 'line' | 'circle' | 'rectangle',
+    points?: number[][],           // for freehand/eraser: [[x,y], ...]
+    color?: string,                // stroke color
+    strokeWidth?: number,          // brush size
+    // for shapes:
+    x?, y?, x2?, y2?, width?, height?, radius?
+  }
+
+RUNTIME FLOW (High-Level)
+--------------------------------------------------------------------------------
+1. Client connects to server via Socket.IO and joins a room.
+2. Server adds user to room and broadcasts presence. New user receives current
+   board state (elements) and current users list.
+3. User draws:
+   - onMouseDown: client creates a new element and emits DRAW_START.
+   - onMouseMove: client appends points to element and emits DRAW_MOVE.
+   - onMouseUp: client emits DRAW_END.
+4. Other clients receive events and update their canvases in real-time.
+5. Clear Canvas: client clears local elements and emits CLEAR_BOARD; server
+   clears room state and broadcasts CLEAR_BOARD to all clients.
+
+KEY IMPLEMENTATION DETAILS
+--------------------------------------------------------------------------------
+- React-Konva is used instead of raw canvas for a declarative React API.
+- Stage sizing is computed from a dedicated container to ensure full
+  right-side interactivity and correct resizing.
+- Mouse leave triggers a safe draw end to prevent unintended continued strokes.
+- Color pickers pause drawing while open and remain open for multiple
+  selections. Closing overlays resumes normal drawing when the user clicks
+  back onto the canvas.
+- Eraser uses globalCompositeOperation 'destination-out' so it clears pixels
+  rather than drawing white lines, producing a true eraser effect.
+- Events across users are synchronized through Socket.IO, with server-side
+  room state used for newly joined users and clearing.
+
+DEV/OPS NOTES
+--------------------------------------------------------------------------------
+- Start backend:  cd server && npm start (default port 3001)
+- Start frontend: cd client && npm start (default port 3000)
+- Environment: client reads REACT_APP_SOCKET_URL to connect to the server.
+- The project currently uses an in-memory store (room-manager). For production,
+  a persistent store (DB/Redis) would be recommended to retain board state
+  across server restarts and support scaling to multiple instances.
+
+EXTENSIBILITY IDEAS (Non-AI)
+--------------------------------------------------------------------------------
+- Add selection/transform tools for moving/resizing shapes.
+- Add undo/redo stacks per user.
+- Add export/import (PNG/SVG/JSON) functionality.
+- Add authentication and named rooms.
+- Add rate-limiting or batching for DRAW_MOVE to reduce bandwidth.
+
+CONCLUSION
+--------------------------------------------------------------------------------
+The project delivers a clean, event-driven collaborative whiteboard. The
+frontend focuses on responsiveness, tool usability, and stable drawing, while
+the backend offers simple room-based real-time synchronization. Current code
+is structured for clarity and can be extended with persistence, richer tools,
+and production-grade features as needed.
+
+

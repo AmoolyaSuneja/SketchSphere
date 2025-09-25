@@ -1,0 +1,263 @@
+================================================================================
+                    SKETCHSPHERE PROJECT FLOWCHART
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           START: User Opens Browser                        │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Load SketchSphere Application                           │
+│  • React App Initializes                                                  │
+│  • Socket.IO Connection Established                                       │
+│  • AI Model Loading (TensorFlow.js)                                       │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      Whiteboard Interface Loaded                           │
+│  • Drawing Tools Panel (Pencil, Eraser, Colors, AI Toggle)                │
+│  • Canvas Area (Konva.js Stage)                                           │
+│  • User Panel (Connected Users)                                           │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         User Interaction                                  │
+│  • Select Tool (Pencil/Eraser)                                            │
+│  • Choose Color                                                           │
+│  • Adjust Brush Size                                                      │
+│  • Toggle AI Recognition                                                  │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        Drawing Process                                    │
+│  • Mouse Down: Start New Stroke                                           │
+│  • Mouse Move: Capture Drawing Points                                     │
+│  • Mouse Up: Finish Drawing                                               │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Store Drawing Data                                     │
+│  • Add Points to Elements Array                                           │
+│  • Assign Unique ID                                                       │
+│  • Set Color and Stroke Width                                             │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    AI Shape Recognition?                                  │
+│                    (Shape Recognition Enabled?)                           │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+                    ┌─ YES ─┐                    ┌─ NO ─┐
+                    │       │                    │      │
+                    ▼       │                    ▼      │
+┌─────────────────────────────────────────────────────────────┐              │
+│                AI Processing Pipeline                      │              │
+│  • Point Normalization (0-1 range)                        │              │
+│  • Bitmap Creation (64x64 pixels)                         │              │
+│  • Feature Extraction (7 geometric features)              │              │
+│  • Neural Network Prediction                              │              │
+└─────────────────────┬───────────────────────────────────────┘              │
+                      │                                                    │
+                      ▼                                                    │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Neural Network Processing                              │
+│  Input: 4,103 features (4,096 pixels + 7 features)                       │
+│  Layer 1: 128 neurons (ReLU)                                             │
+│  Dropout: 30%                                                            │
+│  Layer 2: 64 neurons (ReLU)                                              │
+│  Dropout: 20%                                                            │
+│  Output: 5 classes (Softmax)                                             │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Get Prediction Results                                 │
+│  • Probabilities for each shape class                                     │
+│  • Find highest confidence                                                │
+│  • Shape Type: line, circle, rectangle, triangle, freehand                │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Confidence Check                                       │
+│                    (Confidence > 30%?)                                    │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+                    ┌─ YES ─┐                    ┌─ NO ─┐
+                    │       │                    │      │
+                    ▼       │                    ▼      │
+┌─────────────────────────────────────────────────────────────┐              │
+│                Use AI Prediction                          │              │
+│  • Shape Type: [line/circle/rectangle/triangle]           │              │
+│  • Confidence Score                                       │              │
+└─────────────────────┬───────────────────────────────────────┘              │
+                      │                                                    │
+                      ▼                                                    │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                Fallback Geometric Analysis                                │
+│  • Line Detection: !closed && aspectRatio > 3 && straightness < 1.5      │
+│  • Circle Detection: closed && width ≈ height                             │
+│  • Rectangle Detection: closed && aspectRatio < 2                         │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Final Confidence Check                                 │
+│                    (Final Confidence > 50%?)                              │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+                    ┌─ YES ─┐                    ┌─ NO ─┐
+                    │       │                    │      │
+                    ▼       │                    ▼      │
+┌─────────────────────────────────────────────────────────────┐              │
+│                Convert to Perfect Shape                   │              │
+│  • Line: Start/End points from bounding box               │              │
+│  • Circle: Center and radius calculation                  │              │
+│  • Rectangle: Exact bounding box dimensions               │              │
+│  • Triangle: Bounding box approximation                   │              │
+└─────────────────────┬───────────────────────────────────────┘              │
+                      │                                                    │
+                      ▼                                                    │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                Keep as Freehand Drawing                                   │
+│  • Maintain original stroke data                                          │
+│  • No shape conversion                                                    │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Update Elements Array                                  │
+│  • Replace or keep stroke data                                            │
+│  • Maintain color and stroke width                                        │
+│  • Preserve unique ID                                                     │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Real-time Synchronization                              │
+│  • Emit DRAW_START, DRAW_MOVE, DRAW_END events                           │
+│  • Emit SHAPE_RECOGNIZED event (if shape converted)                      │
+│  • Send to all connected users via WebSocket                              │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Backend Processing                                     │
+│  • Node.js Server receives events                                        │
+│  • Room Manager handles user connections                                 │
+│  • Socket Handler processes drawing events                               │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Broadcast to Other Users                               │
+│  • Forward drawing events to room participants                            │
+│  • Maintain room state                                                    │
+│  • Handle user join/leave events                                          │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Other Users Receive Updates                            │
+│  • Update their elements array                                            │
+│  • Render new drawings/shapes                                             │
+│  • Show real-time collaboration                                           │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Continue Drawing?                                      │
+│                    (User continues drawing?)                              │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+                    ┌─ YES ─┐                    ┌─ NO ─┐
+                    │       │                    │      │
+                    │       │                    ▼      │
+                    │       │  ┌─────────────────────────────────────────────┐
+                    │       │  │              END SESSION                   │
+                    │       │  │  • User closes browser                     │
+                    │       │  │  • Socket connection closes                │
+                    │       │  │  • Clean up resources                      │
+                    │       │  └─────────────────────────────────────────────┘
+                    │       │
+                    └───────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Learning System (Optional)                             │
+│  • User can provide feedback on shape recognition                         │
+│  • Train model with correct shape labels                                  │
+│  • Save updated weights to localStorage                                   │
+│  • Improve future recognition accuracy                                    │
+└─────────────────────┬───────────────────────────────────────────────────────┘
+                      │
+                      ▼
+                    ┌─────────────────────────────────────────────────────────┐
+                    │              LOOP BACK TO DRAWING                      │
+                    │              (Continue User Interaction)               │
+                    └─────────────────────────────────────────────────────────┘
+
+================================================================================
+                              LEGEND
+================================================================================
+
+┌─────────────┐  = Process/Function
+└─────────────┘
+
+┌─────────────┐  = Decision Point
+└─────────────┘
+
+    ▼         = Data Flow Direction
+
+┌─ YES ─┐     = Decision Branch (Yes)
+└───────┘
+
+┌─ NO ─┐      = Decision Branch (No)
+└──────┘
+
+================================================================================
+                            KEY COMPONENTS
+================================================================================
+
+1. FRONTEND (React + Konva.js)
+   - Whiteboard Component
+   - Drawing Tools Panel
+   - AI Shape Recognition Service
+   - Socket.IO Client
+
+2. BACKEND (Node.js + Express)
+   - Socket.IO Server
+   - Room Manager
+   - Socket Handler
+   - AI Service
+
+3. AI SYSTEM (TensorFlow.js)
+   - Neural Network Model
+   - Feature Extraction
+   - Shape Recognition
+   - Learning System
+
+4. REAL-TIME COMMUNICATION
+   - WebSocket Events
+   - Room Management
+   - User Synchronization
+   - Drawing Updates
+
+================================================================================
+                            DATA FLOW
+================================================================================
+
+User Input → Drawing Capture → AI Processing → Shape Recognition → 
+Real-time Sync → Backend Processing → Other Users → Visual Update
+
+================================================================================
