@@ -3,7 +3,9 @@ export const SHAPES = {
   RECTANGLE: 'rectangle',
   TRIANGLE: 'triangle',
   LINE: 'line',
-  FREEHAND: 'freehand'
+  FREEHAND: 'freehand',
+  HEXAGON: 'hexagon',
+  PENTAGON: 'pentagon'
 };
 
 export const EVENTS = {

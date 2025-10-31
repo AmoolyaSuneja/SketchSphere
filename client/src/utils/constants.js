@@ -5,7 +5,9 @@ export const SHAPES = {
   LINE: 'line',
   FREEHAND: 'freehand',
   ERASER: 'eraser',
-  TEXT: 'text'
+  TEXT: 'text',
+  HEXAGON: 'hexagon',
+  PENTAGON: 'pentagon'
 };
 
 export const EVENTS = {
